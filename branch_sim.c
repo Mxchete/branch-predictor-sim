@@ -9,7 +9,7 @@
 // #define MORE_PRINTS
 
 // just for fun
-#define TRACK_TIME
+// #define TRACK_TIME
 
 #ifdef TRACK_TIME
 #include <time.h>
