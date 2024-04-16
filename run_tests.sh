@@ -7,7 +7,7 @@ if [[ "$A" != "$B" ]]; then
 	echo "$A"
 	echo "Predicted:"
 	echo "$B"
-	1="FAIL"
+	ONE="FAIL"
 fi
 
 A=$(./predictor 8 5 tests/gobmk_trace.txt)
