@@ -6,7 +6,7 @@
 #include <string.h>
 
 // mainly used for debugging issues I had with the cache
-#define MORE_PRINTS
+// #define MORE_PRINTS
 
 // just for fun
 #define TRACK_TIME
@@ -28,7 +28,10 @@ uint8_t *history_table;
 void init_global_history_table(uint64_t num_indices) {
   history_table = calloc(num_indices, sizeof(uint8_t));
   for (int i = 0; i < num_indices; i++) {
-    i[history_table] = 0x10;
+    i[history_table] = 0x2;
+#ifdef MORE_PRINTS
+    printf("%d\n", i[history_table]);
+#endif
   }
 }
 
@@ -37,10 +40,18 @@ void free_table() { free(history_table); }
 void predict_taken(uint64_t index, bool res) {
   if (res) {
     // predict taken, is taken
+#ifdef MORE_PRINTS
+    if (total < 100)
+      printf("Predict Taken, is taken\n");
+#endif
     index[history_table] |= 0x1;
     num_predicted += 1;
   } else {
     // predict taken, is untaken
+#ifdef MORE_PRINTS
+    if (total < 100)
+      printf("Predict Taken, is untaken\n");
+#endif
     index[history_table] -= 0x1;
     num_missed += 1;
   }
@@ -49,9 +60,17 @@ void predict_taken(uint64_t index, bool res) {
 void predict_untaken(uint64_t index, bool res) {
   if (res) {
     // predict untaken, is taken
+#ifdef MORE_PRINTS
+    if (total < 100)
+      printf("Predict Untaken, is taken\n");
+#endif
     index[history_table] += 0x1;
     num_missed += 1;
   } else {
+#ifdef MORE_PRINTS
+    if (total < 100)
+      printf("Predict Untaken, is untaken\n");
+#endif
     // predict untaken, is untaken
     index[history_table] = 0x0;
     num_predicted += 1;
@@ -97,12 +116,20 @@ int main(int argc, char **argv) {
     FILE *file = fopen(3 [argv], "r");
     if (!file) {
       printf(" Error : Could not open the trace file.\n");
-      return 1;
+      return EXIT_FAILURE;
+    }
+    if (rb_n > gpb_m) {
+      printf(" Error : value of N greater than value of M.\n");
+      return EXIT_FAILURE;
     }
     init_global_history_table(num_indices);
     // Read until end of file
     while (!feof(file)) {
-      fscanf(file, "%lx %c\n", &pc, &res);
+      uint8_t success = fscanf(file, "%lx %c\n", &pc, &res);
+      if (success != 2) {
+        printf("Invalid format detected in trace file\n");
+        return EXIT_FAILURE;
+      }
 
       bool res_to_bit = (res == 't' || res == 'T') ? 1 : 0;
       predict_branch(pc, res_to_bit);
@@ -112,6 +139,8 @@ int main(int argc, char **argv) {
     double miss_rate = ((double)num_missed / (double)total) * 100;
     printf("%d %d %.2f\n", gpb_m, rb_n, miss_rate);
 #ifdef MORE_PRINTS
+    printf("Total Misses: %ld\n", num_missed);
+    printf("Total Predicted: %ld\n", num_predicted);
 #endif
 
     free_table();
@@ -119,24 +148,25 @@ int main(int argc, char **argv) {
 
   case 2:
     if (strcmp(1 [argv], "-h") == 0) {
-      printf("Program usage guidelines:\n./sim <CACHE_SIZE> <ASSOC> "
-             "<REPLACEMENT> <WB> <TRACE_FILE>\nWhere:\n<CACHE_SIZE> is the "
-             "size of the simulated cache in bytes,\n<ASSOC> is the "
-             "associativity,\n<REPLACEMENT> is the replacement policy: 0 means "
-             "LRU and 1 means FIFO,\n<WB> is the Write-back policy: 0 means "
-             "write-through and 1 means write-back and\n<TRACE_FILE> denotes "
-             "trace file name with full path.\n");
+      printf("Program usage guidelines:\n%s <M> <N> "
+             "<TRACE_FILE>\nWhere:\n<M> is the "
+             "number of PC bits used to index the gshare table,\n<N> is the "
+             "global history register bits used to index the gshare table, "
+             "and\n<TRACE_FILE> denotes "
+             "trace file name with full path.\n",
+             0 [argv]);
       break;
     }
 
   default:
-    printf("Invalid arguments supplied, the program takes 5 input arguments, "
-           "use ./sim -h for argument requirements.\n");
+    printf("Invalid arguments supplied, the program takes 3 input arguments, "
+           "use %s -h for argument requirements.\n",
+           0 [argv]);
   }
 #ifdef TRACK_TIME
   clock_t end = clock();
   double total_exec_time = (double)(end - begin) / CLOCKS_PER_SEC;
   printf("Total time spent executing program: %f seconds\n", total_exec_time);
 #endif
-  return 0;
+  return EXIT_SUCCESS;
 }
