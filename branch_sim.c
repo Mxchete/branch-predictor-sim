@@ -99,7 +99,7 @@ void predict_branch(uint64_t pc, bool res) {
     predict_untaken(index, res);
     break;
   }
-  bhr = (bhr >> 1) | (res << (rb_n - 1));
+  bhr = (rb_n != 0) ? (bhr >> 1) | (res << (rb_n - 1)) : 0;
 }
 
 int main(int argc, char **argv) {
