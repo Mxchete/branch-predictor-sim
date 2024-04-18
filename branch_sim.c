@@ -28,7 +28,7 @@ uint8_t *history_table;
 void init_global_history_table(uint64_t num_indices) {
   history_table = calloc(num_indices, sizeof(uint8_t));
   for (int i = 0; i < num_indices; i++) {
-    i[history_table] = 0x2;
+    i[history_table] = 0b10;
 #ifdef MORE_PRINTS
     printf("%d\n", i[history_table]);
 #endif
@@ -44,7 +44,7 @@ void predict_taken(uint64_t index, bool res) {
     if (total < 100)
       printf("Predict Taken, is taken\n");
 #endif
-    index[history_table] |= 0x1;
+    index[history_table] |= 0b1;
     num_predicted += 1;
   } else {
     // predict taken, is untaken
@@ -52,7 +52,7 @@ void predict_taken(uint64_t index, bool res) {
     if (total < 100)
       printf("Predict Taken, is untaken\n");
 #endif
-    index[history_table] -= 0x1;
+    index[history_table] -= 0b1;
     num_missed += 1;
   }
 }
@@ -64,7 +64,7 @@ void predict_untaken(uint64_t index, bool res) {
     if (total < 100)
       printf("Predict Untaken, is taken\n");
 #endif
-    index[history_table] += 0x1;
+    index[history_table] += 0b1;
     num_missed += 1;
   } else {
 #ifdef MORE_PRINTS
@@ -72,7 +72,7 @@ void predict_untaken(uint64_t index, bool res) {
       printf("Predict Untaken, is untaken\n");
 #endif
     // predict untaken, is untaken
-    index[history_table] = 0x0;
+    index[history_table] = 0b00;
     num_predicted += 1;
   }
 }
@@ -80,7 +80,7 @@ void predict_untaken(uint64_t index, bool res) {
 uint64_t gen_mask() {
   uint64_t mask = 0;
   for (int i = 0; i < gpb_m; i++) {
-    mask |= (0x1 << i);
+    mask |= (0b1 << i);
   }
   return mask;
 }
