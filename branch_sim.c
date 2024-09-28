@@ -28,9 +28,9 @@ uint8_t *history_table;
 void init_global_history_table(uint64_t num_indices) {
   history_table = calloc(num_indices, sizeof(uint8_t));
   for (int i = 0; i < num_indices; i++) {
-    i[history_table] = 0b10;
+    history_table[i] = 0b10;
 #ifdef MORE_PRINTS
-    printf("%d\n", i[history_table]);
+    printf("%d\n", history_table[i]);
 #endif
   }
 }
@@ -44,7 +44,7 @@ void predict_taken(uint64_t index, bool res) {
     if (total < 100)
       printf("Predict Taken, is taken\n");
 #endif
-    index[history_table] |= 0b1;
+    history_table[index] |= 0b1;
     num_predicted += 1;
   } else {
     // predict taken, is untaken
@@ -52,7 +52,7 @@ void predict_taken(uint64_t index, bool res) {
     if (total < 100)
       printf("Predict Taken, is untaken\n");
 #endif
-    index[history_table] -= 0b1;
+    history_table[index] -= 0b1;
     num_missed += 1;
   }
 }
@@ -64,7 +64,7 @@ void predict_untaken(uint64_t index, bool res) {
     if (total < 100)
       printf("Predict Untaken, is taken\n");
 #endif
-    index[history_table] += 0b1;
+    history_table[index] += 0b1;
     num_missed += 1;
   } else {
 #ifdef MORE_PRINTS
@@ -72,7 +72,7 @@ void predict_untaken(uint64_t index, bool res) {
       printf("Predict Untaken, is untaken\n");
 #endif
     // predict untaken, is untaken
-    index[history_table] = 0b00;
+    history_table[index] = 0b00;
     num_predicted += 1;
   }
 }
@@ -88,7 +88,7 @@ uint64_t gen_mask() {
 void predict_branch(uint64_t pc, bool res) {
   uint64_t mask = gen_mask();
   uint64_t index = ((pc >> 2) & mask) ^ (bhr << (gpb_m - rb_n));
-  switch (index[history_table]) {
+  switch (history_table[index]) {
   case 3:
   case 2:
     predict_taken(index, res);
@@ -110,10 +110,10 @@ int main(int argc, char **argv) {
   uint64_t pc;
   switch (argc) {
   case 4:
-    gpb_m = atoi(1 [argv]);
-    rb_n = atoi(2 [argv]);
+    gpb_m = atoi(argv[1]);
+    rb_n = atoi(argv[2]);
     uint64_t num_indices = (uint64_t)pow((double)2, (double)gpb_m);
-    FILE *file = fopen(3 [argv], "r");
+    FILE *file = fopen(argv[3], "r");
     if (!file) {
       printf(" Error : Could not open the trace file.\n");
       return EXIT_FAILURE;
@@ -147,21 +147,21 @@ int main(int argc, char **argv) {
     break;
 
   case 2:
-    if (strcmp(1 [argv], "-h") == 0) {
+    if (strcmp(argv[1], "-h") == 0) {
       printf("Program usage guidelines:\n%s <M> <N> "
              "<TRACE_FILE>\nWhere:\n<M> is the "
              "number of PC bits used to index the gshare table,\n<N> is the "
              "global history register bits used to index the gshare table, "
              "and\n<TRACE_FILE> denotes "
              "trace file name with full path.\n",
-             0 [argv]);
+             argv[0]);
       break;
     }
 
   default:
     printf("Invalid arguments supplied, the program takes 3 input arguments, "
            "use %s -h for argument requirements.\n",
-           0 [argv]);
+           argv[0]);
   }
 #ifdef TRACK_TIME
   clock_t end = clock();
